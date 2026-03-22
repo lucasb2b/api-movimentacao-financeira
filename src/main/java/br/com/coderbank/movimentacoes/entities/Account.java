@@ -19,7 +19,7 @@ public class Account {
     @Column(nullable = false, length = 4, columnDefinition = "int default 1")
     private Integer agencyNumber;
 
-    @Column(nullable = false, length = 6)
+    @Column(nullable = false, length = 6, unique = true)
     private Integer accountNumber;
 
     @Column(nullable = false, precision = 15, scale = 2, columnDefinition = "DECIMAL(15,2) DEFAULT 0.00")
@@ -37,6 +37,7 @@ public class Account {
     private String updatedAt;
 
     @Column
+    @Enumerated(EnumType.STRING)
     private Status status;
 
     public UUID getIdAccount() {
