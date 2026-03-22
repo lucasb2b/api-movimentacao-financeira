@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
@@ -46,6 +47,26 @@ public class AccountService {
         );
     }
 
+
+    public AccountResponseDTO getAccountById(UUID idAccount){
+
+        Account account = accountRepository.findById(idAccount).orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+
+        String agencyFormated = String.format("%04d", account.getAgencyNumber());
+
+        String acc = String.valueOf(account.getAccountNumber());
+        String accountFormatted = acc.substring(0, 5) + "-" + acc.substring(5);
+
+        String balanceFormatted = account.getBalance().setScale(2).toString();
+
+        return new AccountResponseDTO(
+                account.getIdAccount(),
+                agencyFormated,
+                accountFormatted,
+                balanceFormatted,
+                account.getCreatedAt()
+        );
+    }
 
     private Integer generateAndVerifyAccountNumber(){
         int accountNumber = ThreadLocalRandom.current().nextInt(100000,1000000);
