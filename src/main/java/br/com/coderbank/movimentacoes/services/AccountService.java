@@ -4,6 +4,7 @@ import br.com.coderbank.movimentacoes.dtos.request.AccountRequestDTO;
 import br.com.coderbank.movimentacoes.dtos.response.AccountResponseDTO;
 import br.com.coderbank.movimentacoes.entities.Account;
 import br.com.coderbank.movimentacoes.entities.enums.Status;
+import br.com.coderbank.movimentacoes.exceptions.InvalidFieldException;
 import br.com.coderbank.movimentacoes.repositories.AccountRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
