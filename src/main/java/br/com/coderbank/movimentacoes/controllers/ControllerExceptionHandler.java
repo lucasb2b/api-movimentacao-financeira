@@ -3,6 +3,7 @@ package br.com.coderbank.movimentacoes.controllers;
 import br.com.coderbank.movimentacoes.exceptions.InvalidFieldException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.net.URI;
+import java.util.HashMap;
 
 @ControllerAdvice
 public class ControllerExceptionHandler {
@@ -32,24 +34,33 @@ public class ControllerExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
-    public ProblemDetail handleValidationException(MethodArgumentNotValidException ex) {
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ProblemDetail handleValidationException(final MethodArgumentNotValidException exception){
 
-        String errorMessage = ex.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .map(err -> err.getField() + ": " + err.getDefaultMessage())
-                .findFirst()
-                .orElse("Erro de validação");
+        final var validationErrors = buildHashMapValidationsErrors(exception).toString();
 
-        var problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, errorMessage);
-
-        problemDetail.setTitle("Dados inválidos");
-        problemDetail.setType(URI.create("https://api.coderbank.com.br/erros/validacao"));
-        problemDetail.setInstance(URI.create("/v1/contas"));
+        var problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, validationErrors);
+        problemDetail.setTitle("Data sent in the request is invalid");
+        problemDetail.setType(URI.create("https://api.coderbank.com.br/erros/saldo-insuficiente"));
 
         return problemDetail;
+    }
+
+    private static HashMap<Object, Object> buildHashMapValidationsErrors(MethodArgumentNotValidException exception){
+        final var errors = new HashMap<>();
+
+        exception.getBindingResult()
+                .getAllErrors()
+                .forEach((error) -> {
+
+                    var fieldName = ((FieldError) error).getField();
+
+                    var errorMessage = error.getDefaultMessage();
+
+                    errors.put(fieldName, errorMessage);
+                });
+        return errors;
     }
 
 }
