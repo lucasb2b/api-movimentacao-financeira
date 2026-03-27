@@ -4,6 +4,7 @@ import br.com.coderbank.movimentacoes.dtos.request.AccountRequestDTO;
 import br.com.coderbank.movimentacoes.dtos.response.AccountResponseDTO;
 import br.com.coderbank.movimentacoes.entities.Account;
 import br.com.coderbank.movimentacoes.entities.enums.Status;
+import br.com.coderbank.movimentacoes.exceptions.AccountNotFoundException;
 import br.com.coderbank.movimentacoes.exceptions.InvalidFieldException;
 import br.com.coderbank.movimentacoes.repositories.AccountRepository;
 import org.springframework.beans.BeanUtils;
@@ -51,7 +52,7 @@ public class AccountService {
 
     public AccountResponseDTO getAccountById(UUID idAccount){
 
-        Account account = accountRepository.findById(idAccount).orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+        Account account = accountRepository.findById(idAccount).orElseThrow(() -> new AccountNotFoundException("Conta não encontrado com o ID: " + idAccount));
 
         String agencyFormated = String.format("%04d", account.getAgencyNumber());
 
