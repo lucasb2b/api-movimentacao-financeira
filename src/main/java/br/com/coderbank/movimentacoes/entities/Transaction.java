@@ -1,5 +1,6 @@
 package br.com.coderbank.movimentacoes.entities;
 
+import br.com.coderbank.movimentacoes.entities.enums.TransactionStatus;
 import br.com.coderbank.movimentacoes.entities.enums.TransactionType;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -16,7 +17,7 @@ public class Transaction {
     private UUID idTransaction;
 
     @Column
-    private BigDecimal value;
+    private BigDecimal amount;
 
     @Column
     private String description;
@@ -26,10 +27,14 @@ public class Transaction {
     private TransactionType transactionType;
 
     @Column
-    private Account idAccountSource;
+    private String idAccountSource;
 
     @Column
-    private Account idAccountDestination;
+    private String idAccountDestination;
+
+    @Column
+    @Enumerated(EnumType.STRING)
+    private TransactionStatus transactionStatus;
 
     @Column
     @CreationTimestamp
@@ -43,12 +48,12 @@ public class Transaction {
         this.idTransaction = idTransaction;
     }
 
-    public BigDecimal getValue() {
-        return value;
+    public BigDecimal getAmount() {
+        return amount;
     }
 
-    public void setValue(BigDecimal value) {
-        this.value = value;
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
     }
 
     public String getDescription() {
@@ -67,20 +72,28 @@ public class Transaction {
         this.transactionType = transactionType;
     }
 
-    public Account getIdAccountSource() {
+    public String getIdAccountSource() {
         return idAccountSource;
     }
 
-    public void setIdAccountSource(Account idAccountSource) {
+    public void setIdAccountSource(String idAccountSource) {
         this.idAccountSource = idAccountSource;
     }
 
-    public Account getIdAccountDestination() {
+    public String getIdAccountDestination() {
         return idAccountDestination;
     }
 
-    public void setIdAccountDestination(Account idAccountDestination) {
+    public void setIdAccountDestination(String idAccountDestination) {
         this.idAccountDestination = idAccountDestination;
+    }
+
+    public TransactionStatus getTransactionStatus() {
+        return transactionStatus;
+    }
+
+    public void setTransactionStatus(TransactionStatus transactionStatus) {
+        this.transactionStatus = transactionStatus;
     }
 
     public String getCreatedAt() {
