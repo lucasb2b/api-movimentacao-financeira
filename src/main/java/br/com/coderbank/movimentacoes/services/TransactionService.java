@@ -20,11 +20,14 @@ public class TransactionService {
     @Autowired
     private TransactionRepository transactionRepository;
 
+    @Autowired
+    private AccountService accountService;
+
     @Transactional
     public TransactionResponseDTO handleTransaction(final TransactionRequestDTO transactionRequestDTO){
 
         return switch (transactionRequestDTO.transactionType()){
-            case SAQUE -> null;
+            case SAQUE -> this.withdraw(transactionRequestDTO);
             case DEPOSITO -> this.deposit(transactionRequestDTO);
             case TRANSFERENCIA -> null;
         };
@@ -32,11 +35,38 @@ public class TransactionService {
 
     private TransactionResponseDTO deposit(final TransactionRequestDTO transactionRequestDTO){
 
+        accountService.deposit(transactionRequestDTO.idAccountDestination(), transactionRequestDTO.amount());
+
         var transactionEntity = new Transaction();
 
         BeanUtils.copyProperties(transactionRequestDTO, transactionEntity);
 
         transactionEntity.setTransactionType(TransactionType.DEPOSITO);
+        transactionEntity.setTransactionStatus(TransactionStatus.CONCLUIDA);
+        transactionEntity.setCreatedAt(String.valueOf(LocalDateTime.now()));
+
+
+        transactionRepository.save(transactionEntity);
+
+        return new TransactionResponseDTO(
+                transactionEntity.getIdTransaction(),
+                transactionEntity.getTransactionType(),
+                transactionEntity.getAmount(),
+                transactionEntity.getCreatedAt(),
+                transactionEntity.getTransactionStatus()
+        );
+
+    }
+
+    private TransactionResponseDTO withdraw(final TransactionRequestDTO transactionRequestDTO){
+
+        accountService.withdraw(transactionRequestDTO.idAccountSource(), transactionRequestDTO.amount());
+
+        var transactionEntity = new Transaction();
+
+        BeanUtils.copyProperties(transactionRequestDTO, transactionEntity);
+
+        transactionEntity.setTransactionType(TransactionType.SAQUE);
         transactionEntity.setTransactionStatus(TransactionStatus.CONCLUIDA);
         transactionEntity.setCreatedAt(String.valueOf(LocalDateTime.now()));
 

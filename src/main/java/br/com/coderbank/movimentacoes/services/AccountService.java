@@ -79,4 +79,20 @@ public class AccountService {
 
         return  accountNumber;
     }
+
+    public void deposit(UUID accountId, BigDecimal amount){
+        Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Conta não encontrada"));
+
+        account.setBalance(account.getBalance().add(amount));
+
+        accountRepository.save(account);
+    }
+
+    public void withdraw(UUID accountId, BigDecimal amount){
+        Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Conta não encontrada"));
+
+        account.setBalance(account.getBalance().subtract(amount));
+
+        accountRepository.save(account);
+    }
 }
