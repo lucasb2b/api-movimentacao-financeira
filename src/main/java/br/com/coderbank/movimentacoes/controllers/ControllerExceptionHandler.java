@@ -1,7 +1,9 @@
 package br.com.coderbank.movimentacoes.controllers;
 
 import br.com.coderbank.movimentacoes.exceptions.AccountNotFoundException;
+import br.com.coderbank.movimentacoes.exceptions.InsufficientBalanceException;
 import br.com.coderbank.movimentacoes.exceptions.InvalidFieldException;
+import br.com.coderbank.movimentacoes.exceptions.UnknownAccountException;
 import jakarta.el.MethodNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -80,6 +82,40 @@ public class ControllerExceptionHandler {
         problemDetail.setTitle("Conflito de regra de negócio");
         problemDetail.setType(URI.create("https://api.coderbank.com.br/erros/saldo-insuficiente"));
         problemDetail.setStatus(HttpStatus.CONFLICT);
+        problemDetail.setInstance(URI.create("/v1/transacoes"));
+
+        return problemDetail;
+    }
+
+    @ExceptionHandler(UnknownAccountException.class)
+    @ResponseBody
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ProblemDetail handleBusiness(final UnknownAccountException exception){
+        final var exceptionMessage = exception.getMessage();
+
+        var problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exceptionMessage);
+
+        problemDetail.setTitle("Conflito de Regra de Negócio");
+        problemDetail.setType(URI.create("https://api.coderbank.com.br/erros/saldo-insuficiente"));
+        problemDetail.setStatus(HttpStatus.NOT_FOUND);
+        problemDetail.setDetail(exceptionMessage);
+        problemDetail.setInstance(URI.create("/v1/transacoes"));
+
+        return problemDetail;
+    }
+
+    @ExceptionHandler(InsufficientBalanceException.class)
+    @ResponseBody
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ProblemDetail handleInsufficientBalance(final InsufficientBalanceException exception){
+        final var exceptionMessage = exception.getMessage();
+
+        var problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exceptionMessage);
+
+        problemDetail.setTitle("Conflito de Regra de Negócio");
+        problemDetail.setType(URI.create("https://api.coderbank.com.br/erros/saldo-insuficiente"));
+        problemDetail.setStatus(HttpStatus.CONFLICT);
+        problemDetail.setDetail(exceptionMessage);
         problemDetail.setInstance(URI.create("/v1/transacoes"));
 
         return problemDetail;

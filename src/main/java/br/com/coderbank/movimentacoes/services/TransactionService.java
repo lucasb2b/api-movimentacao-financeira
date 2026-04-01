@@ -29,7 +29,7 @@ public class TransactionService {
         return switch (transactionRequestDTO.transactionType()){
             case SAQUE -> this.withdraw(transactionRequestDTO);
             case DEPOSITO -> this.deposit(transactionRequestDTO);
-            case TRANSFERENCIA -> null;
+            case TRANSFERENCIA -> this.transfer(transactionRequestDTO);
         };
     }
 
@@ -70,6 +70,30 @@ public class TransactionService {
         transactionEntity.setTransactionStatus(TransactionStatus.CONCLUIDA);
         transactionEntity.setCreatedAt(String.valueOf(LocalDateTime.now()));
 
+
+        transactionRepository.save(transactionEntity);
+
+        return new TransactionResponseDTO(
+                transactionEntity.getIdTransaction(),
+                transactionEntity.getTransactionType(),
+                transactionEntity.getAmount(),
+                transactionEntity.getCreatedAt(),
+                transactionEntity.getTransactionStatus()
+        );
+
+    }
+
+    private TransactionResponseDTO transfer(final TransactionRequestDTO transactionRequestDTO){
+
+        accountService.transfer(transactionRequestDTO.idAccountSource(), transactionRequestDTO.idAccountDestination(), transactionRequestDTO.amount());
+
+        var transactionEntity = new Transaction();
+
+        BeanUtils.copyProperties(transactionRequestDTO, transactionEntity);
+
+        transactionEntity.setTransactionType(TransactionType.TRANSFERENCIA);
+        transactionEntity.setTransactionStatus(TransactionStatus.CONCLUIDA);
+        transactionEntity.setCreatedAt(String.valueOf(LocalDateTime.now()));
 
         transactionRepository.save(transactionEntity);
 

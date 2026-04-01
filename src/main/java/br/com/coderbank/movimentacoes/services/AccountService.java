@@ -10,6 +10,7 @@ import br.com.coderbank.movimentacoes.repositories.AccountRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -94,5 +95,18 @@ public class AccountService {
         account.setBalance(account.getBalance().subtract(amount));
 
         accountRepository.save(account);
+    }
+
+    @Transactional
+    public void transfer(UUID accountIdSource, UUID accountIdDestination, BigDecimal amount){
+
+        Account accountSource = accountRepository.findById(accountIdSource).orElseThrow(() -> new AccountNotFoundException("Conta não encontrada"));
+        Account accountDestination = accountRepository.findById(accountIdDestination).orElseThrow(() -> new AccountNotFoundException("Conta não encontrada"));
+
+        accountSource.setBalance(accountSource.getBalance().subtract(amount));
+        accountDestination.setBalance(accountDestination.getBalance().add(amount));
+
+        accountRepository.save(accountSource);
+        accountRepository.save(accountDestination);
     }
 }
