@@ -5,6 +5,7 @@ import br.com.coderbank.movimentacoes.dtos.response.TransactionResponseDTO;
 import br.com.coderbank.movimentacoes.entities.Transaction;
 import br.com.coderbank.movimentacoes.entities.enums.TransactionStatus;
 import br.com.coderbank.movimentacoes.entities.enums.TransactionType;
+import br.com.coderbank.movimentacoes.exceptions.InsufficientBalanceException;
 import br.com.coderbank.movimentacoes.repositories.TransactionRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 public class TransactionService {
@@ -23,7 +25,7 @@ public class TransactionService {
     @Autowired
     private AccountService accountService;
 
-    @Transactional
+    @Transactional(noRollbackFor = InsufficientBalanceException.class)
     public TransactionResponseDTO handleTransaction(final TransactionRequestDTO transactionRequestDTO){
 
         return switch (transactionRequestDTO.transactionType()){
@@ -41,8 +43,11 @@ public class TransactionService {
 
         BeanUtils.copyProperties(transactionRequestDTO, transactionEntity);
 
+        transactionEntity.setIdAccountDestination(String.valueOf(transactionRequestDTO.idAccountDestination()));
+        transactionEntity.setIdAccountSource(null);
         transactionEntity.setTransactionType(TransactionType.DEPOSITO);
         transactionEntity.setTransactionStatus(TransactionStatus.CONCLUIDA);
+
         transactionEntity.setCreatedAt(String.valueOf(LocalDateTime.now()));
 
 
@@ -60,16 +65,22 @@ public class TransactionService {
 
     private TransactionResponseDTO withdraw(final TransactionRequestDTO transactionRequestDTO){
 
-        accountService.withdraw(transactionRequestDTO.idAccountSource(), transactionRequestDTO.amount());
-
         var transactionEntity = new Transaction();
-
         BeanUtils.copyProperties(transactionRequestDTO, transactionEntity);
-
         transactionEntity.setTransactionType(TransactionType.SAQUE);
-        transactionEntity.setTransactionStatus(TransactionStatus.CONCLUIDA);
         transactionEntity.setCreatedAt(String.valueOf(LocalDateTime.now()));
+        transactionEntity.setIdAccountDestination(null);
+        transactionEntity.setIdAccountSource(String.valueOf(transactionRequestDTO.idAccountSource()));
 
+        try{
+            accountService.withdraw(transactionRequestDTO.idAccountSource(), transactionRequestDTO.amount());
+            transactionEntity.setTransactionStatus(TransactionStatus.CONCLUIDA);
+        }catch (InsufficientBalanceException e){
+            transactionEntity.setTransactionStatus(TransactionStatus.FALHA);
+            transactionRepository.save(transactionEntity);
+
+            throw e;
+        }
 
         transactionRepository.save(transactionEntity);
 

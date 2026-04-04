@@ -5,6 +5,7 @@ import br.com.coderbank.movimentacoes.dtos.response.AccountResponseDTO;
 import br.com.coderbank.movimentacoes.entities.Account;
 import br.com.coderbank.movimentacoes.entities.enums.Status;
 import br.com.coderbank.movimentacoes.exceptions.AccountNotFoundException;
+import br.com.coderbank.movimentacoes.exceptions.InsufficientBalanceException;
 import br.com.coderbank.movimentacoes.exceptions.InvalidFieldException;
 import br.com.coderbank.movimentacoes.repositories.AccountRepository;
 import org.springframework.beans.BeanUtils;
@@ -92,12 +93,17 @@ public class AccountService {
     public void withdraw(UUID accountId, BigDecimal amount){
         Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Conta não encontrada"));
 
+        var actualBalance = account.getBalance();
+
+        if(amount.compareTo(actualBalance) > 0){
+            throw new InsufficientBalanceException("Saldo insuficiente para esta operação");
+        }
+
         account.setBalance(account.getBalance().subtract(amount));
 
         accountRepository.save(account);
     }
 
-    @Transactional
     public void transfer(UUID accountIdSource, UUID accountIdDestination, BigDecimal amount){
 
         Account accountSource = accountRepository.findById(accountIdSource).orElseThrow(() -> new AccountNotFoundException("Conta não encontrada"));
