@@ -5,6 +5,7 @@ import br.com.coderbank.movimentacoes.dtos.response.AccountResponseDTO;
 import br.com.coderbank.movimentacoes.entities.Account;
 import br.com.coderbank.movimentacoes.entities.enums.Status;
 import br.com.coderbank.movimentacoes.exceptions.AccountNotFoundException;
+import br.com.coderbank.movimentacoes.exceptions.DuplicatedAccountException;
 import br.com.coderbank.movimentacoes.exceptions.InsufficientBalanceException;
 import br.com.coderbank.movimentacoes.exceptions.InvalidFieldException;
 import br.com.coderbank.movimentacoes.repositories.AccountRepository;
@@ -108,6 +109,16 @@ public class AccountService {
 
         Account accountSource = accountRepository.findById(accountIdSource).orElseThrow(() -> new AccountNotFoundException("Conta não encontrada"));
         Account accountDestination = accountRepository.findById(accountIdDestination).orElseThrow(() -> new AccountNotFoundException("Conta não encontrada"));
+
+        var actualBalance = accountSource.getBalance();
+
+        if(amount.compareTo(actualBalance) > 0){
+            throw new InsufficientBalanceException("Saldo insuficiente para operação");
+        }
+
+        if (accountIdSource.equals(accountIdDestination)){
+            throw new DuplicatedAccountException("A conta de origem deve ser diferente da conta de destino.");
+        }
 
         accountSource.setBalance(accountSource.getBalance().subtract(amount));
         accountDestination.setBalance(accountDestination.getBalance().add(amount));

@@ -5,6 +5,7 @@ import br.com.coderbank.movimentacoes.dtos.response.TransactionResponseDTO;
 import br.com.coderbank.movimentacoes.entities.Transaction;
 import br.com.coderbank.movimentacoes.entities.enums.TransactionStatus;
 import br.com.coderbank.movimentacoes.entities.enums.TransactionType;
+import br.com.coderbank.movimentacoes.exceptions.DuplicatedAccountException;
 import br.com.coderbank.movimentacoes.exceptions.InsufficientBalanceException;
 import br.com.coderbank.movimentacoes.repositories.TransactionRepository;
 import org.springframework.beans.BeanUtils;
@@ -12,9 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Service
 public class TransactionService {
@@ -25,7 +24,10 @@ public class TransactionService {
     @Autowired
     private AccountService accountService;
 
-    @Transactional(noRollbackFor = InsufficientBalanceException.class)
+    @Transactional(noRollbackFor = {
+            InsufficientBalanceException.class,
+            DuplicatedAccountException.class
+    })
     public TransactionResponseDTO handleTransaction(final TransactionRequestDTO transactionRequestDTO){
 
         return switch (transactionRequestDTO.transactionType()){
