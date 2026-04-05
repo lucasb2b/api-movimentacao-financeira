@@ -10,10 +10,13 @@ import br.com.coderbank.movimentacoes.exceptions.InsufficientBalanceException;
 import br.com.coderbank.movimentacoes.repositories.TransactionRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 public class TransactionService {
@@ -106,7 +109,10 @@ public class TransactionService {
 
         transactionEntity.setTransactionType(TransactionType.TRANSFERENCIA);
         transactionEntity.setTransactionStatus(TransactionStatus.CONCLUIDA);
+        transactionEntity.setIdAccountSource(String.valueOf(transactionRequestDTO.idAccountSource()));
+        transactionEntity.setIdAccountDestination(String.valueOf(transactionRequestDTO.idAccountDestination()));
         transactionEntity.setCreatedAt(String.valueOf(LocalDateTime.now()));
+
 
         transactionRepository.save(transactionEntity);
 
@@ -118,5 +124,24 @@ public class TransactionService {
                 transactionEntity.getTransactionStatus()
         );
 
+    }
+
+    public Page<TransactionResponseDTO> getTransactions(String accountId, Pageable pageable){
+        return transactionRepository.
+                findByIdAccountSourceOrIdAccountDestinationOrderByCreatedAtDesc(
+                        accountId,
+                        accountId,
+                        pageable
+                ).map(this::convertToTransactionResponseDTO);
+    }
+
+    private TransactionResponseDTO convertToTransactionResponseDTO(Transaction transaction){
+        return new TransactionResponseDTO(
+                transaction.getIdTransaction(),
+                transaction.getTransactionType(),
+                transaction.getAmount(),
+                transaction.getCreatedAt(),
+                transaction.getTransactionStatus()
+        );
     }
 }
