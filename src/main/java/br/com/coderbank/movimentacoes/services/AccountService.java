@@ -5,11 +5,14 @@ import br.com.coderbank.movimentacoes.dtos.response.AccountResponseDTO;
 import br.com.coderbank.movimentacoes.entities.Account;
 import br.com.coderbank.movimentacoes.entities.enums.Status;
 import br.com.coderbank.movimentacoes.exceptions.AccountNotFoundException;
+import br.com.coderbank.movimentacoes.exceptions.DuplicatedAccountException;
+import br.com.coderbank.movimentacoes.exceptions.InsufficientBalanceException;
 import br.com.coderbank.movimentacoes.exceptions.InvalidFieldException;
 import br.com.coderbank.movimentacoes.repositories.AccountRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -78,5 +81,49 @@ public class AccountService {
         }
 
         return  accountNumber;
+    }
+
+    public void deposit(UUID accountId, BigDecimal amount){
+        Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Conta não encontrada"));
+
+        account.setBalance(account.getBalance().add(amount));
+
+        accountRepository.save(account);
+    }
+
+    public void withdraw(UUID accountId, BigDecimal amount){
+        Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Conta não encontrada"));
+
+        var actualBalance = account.getBalance();
+
+        if(amount.compareTo(actualBalance) > 0){
+            throw new InsufficientBalanceException("Saldo insuficiente para esta operação");
+        }
+
+        account.setBalance(account.getBalance().subtract(amount));
+
+        accountRepository.save(account);
+    }
+
+    public void transfer(UUID accountIdSource, UUID accountIdDestination, BigDecimal amount){
+
+        Account accountSource = accountRepository.findById(accountIdSource).orElseThrow(() -> new AccountNotFoundException("Conta não encontrada"));
+        Account accountDestination = accountRepository.findById(accountIdDestination).orElseThrow(() -> new AccountNotFoundException("Conta não encontrada"));
+
+        var actualBalance = accountSource.getBalance();
+
+        if(amount.compareTo(actualBalance) > 0){
+            throw new InsufficientBalanceException("Saldo insuficiente para operação");
+        }
+
+        if (accountIdSource.equals(accountIdDestination)){
+            throw new DuplicatedAccountException("A conta de origem deve ser diferente da conta de destino.");
+        }
+
+        accountSource.setBalance(accountSource.getBalance().subtract(amount));
+        accountDestination.setBalance(accountDestination.getBalance().add(amount));
+
+        accountRepository.save(accountSource);
+        accountRepository.save(accountDestination);
     }
 }
